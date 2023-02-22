@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>게시물 리스트 페이지</title>
+</head>
+<style>
+    .layout {
+        width : 500px;
+        margin : 0 auto;
+    }
+
+    a {
+      text-decoration: none;
+      color: #222;
+    }
+
+    a:hover{
+      text-decoration: none;
+      color: #222;
+      font-weight: bold;
+    }
+
+</style>
+<script type="text/javascript">
+
+
+</script>
+<body>
+
+  <div class="layout">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>글번호</th>
+          <th>제목</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="board : ${list}">
+          <td th:text="${board.id}">1</td>
+          <td>
+            <a th:text="${board.title}" th:href="@{/board/view(id=${board.id})}"></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
