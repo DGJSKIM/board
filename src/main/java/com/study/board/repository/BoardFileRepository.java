@@ -9,7 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BoardRepository extends JpaRepository <Board, Integer> { // <Entity, Id타입>
+public interface BoardFileRepository extends JpaRepository<Boardfile, String> {
 
 
+    public List<Boardfile> findByBoard_id(int id);
 }

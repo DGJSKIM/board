@@ -4,10 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,4 +21,9 @@ public class Board {
     private Integer id;
     private String title;
     private String content;
+
+
+
+    @OneToMany(mappedBy = "board")
+    private List<Boardfile> boardfileList = new ArrayList<>();
 }

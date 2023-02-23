@@ -5,6 +5,180 @@
     <title>게시물 작성하기</title>
 </head>
 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"/>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script type="text/javascript">
+
+var totalFileList = []; // 파일 객체 리스트
+var fileSizeList = [];
+    $(document).ready(function(){
+		var fileList = new Object(); // 1회성 파일List -> totalFileList 옮기기용
+
+
+         // 파일 드래그 드랍 시작 (파일 드래그로 업로드 하는 경우)
+		 var obj = $("#dropzone");
+	     obj.on('dragenter', function (e) {
+	          e.stopPropagation();
+	          e.preventDefault();
+	          $(this).css('border', '2px solid #5272A0');
+	     });
+	     obj.on('dragleave', function (e) {
+	          e.stopPropagation();
+	          e.preventDefault();
+	          $(this).css('border', '2px dotted #8296C2');
+	     });
+	     obj.on('dragover', function (e) {
+	          e.stopPropagation();
+	          e.preventDefault();
+	     });
+	     obj.on('drop', function (e) {
+	          e.preventDefault();
+	          $(this).css('border', '2px dotted #8296C2');
+	          var fileList = e.originalEvent.dataTransfer.files;
+
+	          console.log(fileList); // 추가할 파일리스트 체크용
+
+	          addFile(fileList); // 파일 추가
+
+	     });
+
+	    // 파일 선택시 리스트로 받아와서 처리하기 (버튼으로 업로드 하는 경우)
+		$('#ex_file').change(function(e) {
+		    fileList = $(this)[0].files;  //파일 대상이 리스트 형태로 넘어온다.
+		    addFile(fileList);
+		});
+
+		// 파일 삭제버튼 클릭시
+		 $(document).on('click','[name=removeFile]', function(){
+
+	    	 	delete_file_name =$(this).attr('file_name');
+	    	 	delete_file_size =$(this).attr('file_size');
+
+	    	 	for(let i = 0; i < totalFileList.length; i++) {
+	    	 		if(totalFileList[i].name = delete_file_name && delete_file_size == totalFileList[i].size)  {
+	    	 			totalFileList.splice(i, 1);
+	    	 			fileSizeList.splice(i, 1);
+	    	 		    i--;
+	    	 		  }
+	    	 	}
+
+	    	 	console.log(totalFileList);
+
+				$(this).parent().parent().remove();
+				uploadFileCheck();
+		 });
+
+
+        // form 보내기 버튼 클릭
+        $("button#btnWrite").click(function(){
+             var formData = new FormData();
+             if(totalFileList.length > 0){
+               totalFileList.forEach(function(f){
+                    formData.append("fileList", f); // totalFileList 안에 있는 파일을 fileList 안에 넣음
+                    // 같은 key 값에 넣으면 배열처럼 들어감.
+
+                });
+             }
+             formData.append("content",$("textarea#content").val());
+             formData.append("title",$("input#title").val());
+
+             console.log("title"+title);
+             console.log("content"+content);
+
+
+             $.ajax({
+	            url : '/board/writepro',
+	            data : formData,
+	            type:'POST',
+	            enctype:'multipart/form-data',
+	            processData:false,
+	            contentType:false,
+	            dataType:'json',
+	            cache:false,
+	            success:function(json){
+	            	if(json=="1"){
+	            		swal('게시글을 작성했습니다.', "버튼을 누르면 게시판으로 이동합니다..", 'success')
+	            		.then((value) => {
+	            			location.href = "/board/list";
+	            		});
+
+	            	}
+	            	if(!json=="1"){
+	            		swal('글쓰기에 실패하셨습니다.', "이 상태가 지속되면 지원팀에 문의해주세요.", 'warning')
+	            		return false;
+	            	}
+	            	if(json.n==-1){
+	            		swal('메일발송이 실패하셨습니다.', "파일 업로드 진행중 문제가 발생하였습니다.", 'warning')
+	            		return false;
+	            	}
+
+	            },error: function(request, status, error){
+	                alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+	                }
+	            });
+
+        });
+
+
+    }); // end of $(document).ready(function(){} -----------------------
+
+    // Functions
+
+    // 파일 추가하기
+    function addFile(fileList){
+		for(var i=0;i < fileList.length;i++){
+	        var file = fileList[i];
+	        totalFileList.push(file);
+	        console.log(totalFileList);
+
+	        fileSize = setUnitString(file.size);
+	        fileSizeList.push(fileSize);
+
+	        $('#dropzone').append( // 추가된 파일을 표기
+	        '<div class="uploadFile" style="display:flow-root"><span style="float:left">'+file.name+'</span><span style="float:right">'+ fileSize+'<span class = "removeFile" name="removeFile" file_size="'+file.size+'"file_name="'+file.name+'"><i class="far fa-window-close"></i></span></span></div>');
+             uploadFileCheck();
+         }
+    }
+
+	function uploadFileCheck(){
+		if($('.uploadFile').length){ // 파일 추가시 작성되는 uploadFile 클래스로 판단
+			$('#dropzoneMessage').hide();
+		}
+		else{
+			jQuery('#dropzoneMessage').show();
+		}
+	}
+
+	// 파일 size 표기 보기 편하도록 수정
+	function setUnitString (nByte) {
+ 		var nImageSize;
+ 		var sUnit;
+
+ 		if(nByte < 0 ){
+ 			nByte = 0;
+ 		}
+
+ 		if( nByte < 1024) {
+ 			nImageSize = Number(nByte);
+ 			sUnit = 'B';
+ 			return nImageSize + sUnit;
+ 		} else if( nByte > (1024*1024)) {
+ 			nImageSize = Number(parseInt((nByte || 0), 10) / (1024*1024));
+ 			sUnit = 'MB';
+ 			return nImageSize.toFixed(2) + sUnit;
+ 		} else {
+ 			nImageSize = Number(parseInt((nByte || 0), 10) / 1024);
+ 			sUnit = 'KB';
+ 			return nImageSize.toFixed(0) + sUnit;
+ 		}
+    }
+
+
+</script>
+
 <style>
     .layout {
         width : 500px;
@@ -21,14 +195,50 @@
         margin-top : 10px;
     }
 
+
+
 </style>
 <body>
-    <div class="layout">
-        <form action="/board/writepro" method="post">
-            <input name="title" type = "text">
-            <textarea name="content"></textarea>
-            <button type="submit">작성하기</button>
-        </form>
-    </div>
+<div class="layout">
+    <form action="/board/writepro" method="post" enctype="multipart/form-data">
+
+        <table class="table">
+            <tr>
+                <th>제목</th>
+                <td><input id="title" name="title" type="text"></td>
+            </tr>
+            <tr>
+                <th>파일 첨부</th>
+                <td>
+                    <div class="filebox">
+                        <label class="btn btn-outline-secondary" for="ex_file">업로드</label>
+                        <input type="file" id="ex_file" multiple style="display:none;">
+                    </div>
+
+                </td>
+            </tr>
+            <tr>
+                <th style="width: 15%; background-color: #E3F2FD;"></th>
+                <td>
+                    <div id="dropzone">
+
+                        <div id="dropzoneMessage" style="text-align:center; padding:85px;"><i
+                                class="fas fa-paperclip"></i>여기에 첨부 파일을 끌어 오세요
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>내용</th>
+                <td><textarea id="content" name="content"></textarea></td>
+            </tr>
+
+
+        </table>
+        <button id="btnWrite" type="button" class="btn btn-outline-dark"><i class="far fa-paper-plane"></i> 작성하기
+        </button>
+    </form>
+</div>
 </body>
 </html>
