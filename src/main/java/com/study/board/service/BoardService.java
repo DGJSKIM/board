@@ -1,7 +1,7 @@
 package com.study.board.service;
 
-import com.study.board.domain.Board;
-import com.study.board.domain.Boardfile;
+import com.study.board.entity.Board;
+import com.study.board.entity.Boardfile;
 import com.study.board.repository.BoardFileRepository;
 import com.study.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,10 +1,10 @@
 package com.study.board.controller;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.study.board.domain.Board;
-import com.study.board.domain.Boardfile;
+import com.study.board.Dto.UserDto;
+import com.study.board.entity.Board;
 import com.study.board.repository.BoardRepository;
 import com.study.board.service.BoardService;
+import com.study.board.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,17 +12,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 
-import javax.servlet.http.HttpSession;
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 
 // 제가 바보라서 게시글을 전부 board 표기했는데 post 로 표기해야 더 알맞을 것 같습니다. 우선순위가 급한 변경점은 아니기에 일단 그대로 진행하겠습니다.
@@ -33,7 +27,38 @@ public class BoardController {
     private BoardRepository boardRepository;
     @Autowired
     private BoardService boardService;
+    @Autowired
+    private UserService userService;
 
+    /**
+     * 메인화면(로그인)
+     */
+    @GetMapping("/board") // localhost:8090/board/write
+    public String boarMain() {
+        return "boardMain";
+    }
+    /**
+     * 회원가입
+     */
+    @GetMapping("/board/join") // localhost:8090/board/write
+    public String boardJoin() {
+        return "boardJoin";
+    }
+
+    /**
+     * 회원가입 처리
+     */
+    @ResponseBody
+    @PostMapping("/board/joinpro")
+    public String boardJoinPro(UserDto userDto) {
+        // 검증 필요
+         boolean valid = userDto.isValid();
+
+        // 저장
+        userService.userJoin(userDto);
+
+        return userDto.getUserid();
+    }
     /**
      * 게시글 작성페이지
      */
