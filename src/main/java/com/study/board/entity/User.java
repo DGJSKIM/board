@@ -3,10 +3,10 @@ package com.study.board.entity;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @AllArgsConstructor
@@ -20,8 +20,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     private String userid;
     private String password;
     private String nickname;
     private int role;// 1 일반 0 관리자
+/*
+    @OneToMany(mappedBy="user")
+    private List<Board> boardList= new ArrayList<>();
+*/
+
 }

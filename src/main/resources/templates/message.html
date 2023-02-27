@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:if="${#strings.length(data.message) != 0}">
+        <script>
+			top.alert("[[${message.message}]]");
+		</script>
+    </th:block>
+    <th:block th:if="${#strings.length(data.href) != 0}">
+        <script>
+			top.location.href = '[[${message.url}]]';
+		</script>
+    </th:block>
+</head>

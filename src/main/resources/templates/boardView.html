@@ -13,6 +13,42 @@
 
 
 </style>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"/>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script type="text/javascript">
+
+    function resize(obj) {
+        obj.style.height = '1px';
+        obj.style.height = (12 + obj.scrollHeight) + 'px';
+    }
+    // 댓글 추가
+    function addComment(){
+        var queryString = $("form[name=commentFrm]").serialize();
+
+        $.ajax({
+            url : '/board/addCommentpro',
+            data : queryString
+            dataType: "json"
+            method : "post",
+            success : function(result){
+                alert("댓글 성공!");
+
+                }
+            ,
+            error : function(request, status, error) {
+			alert("code: " + request.status + "\n" + "message: "
+					+ request.responseText + "\n" + "error: " + error);
+		    }
+
+
+
+        })
+
+    }
+</script>
 <body>
     <div class="layout">
         <h1 th:text="${board.title}">제목입니다</h1>
@@ -22,6 +58,18 @@
         <p th:text="${board.content}">내용</p>
         <a th:href="@{/board/delete(id=${board.id})}">글삭제</a>
         <a th:href="@{/board/edit(id=${board.id})}">글수정</a>
+
+        <!-- 댓글 작성폼 -->
+        <form name="commentFrm">
+            <input type="hidden" name="boardid" value="${board.id}"/>
+
+
+            <textarea name="text" placeholder="댓글을 입력하세요" style="width: 90%; vertical-align: middle; margin-left: 10px" onkeydown="resize(this)" onkeyup="resize(this)"></textarea>
+            <button type="button" id="addComment" class="btn-secondary listView rounded" onclick="addComment()">등록</button>
+        </form>
     </div>
+
+
+
 </body>
 </html>

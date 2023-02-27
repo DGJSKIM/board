@@ -24,6 +24,9 @@
       color: #222;
       font-weight: bold;
     }
+    .fieldError {
+      border-color: #bd2130;
+    }
 
 </style>
 <script type="text/javascript">
@@ -32,21 +35,42 @@
 </script>
 <body>
 
+
+
   <div class="layout">
-    <form action="/board/joinpro" method="post" >
+    <form role="form" action="/board/joinpro" method="post" th:object="${userDto}">
       <table class="table">
         <tbody>
         <tr>
           <td>아이디</td>
-          <td><input name="userid" type="text"></td>
+          <td>
+            <input name="userid" th:field="*{userid}" type="text"  placeholder="id를 입력하세요."
+              th:class="${#fields.hasErrors('userid')}? 'form-control fieldError' : 'form-control'">
+          </td>
+
         </tr>
+        <tr>
+          <p th:if="${#fields.hasErrors('userid')}" th:errors="*{userid}">Incorrect date</p>
+        </tr>
+
         <tr>
           <td>비밀번호</td>
-          <td><input name="password" type="text"></td>
+          <td>
+            <input name="password" th:field="*{password}" type="text"  placeholder="비밀번호를 입력하세요."
+                   th:class="${#fields.hasErrors('password')}? 'form-control fieldError' : 'form-control'">
+          </td>
+
         </tr>
         <tr>
+          <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>
+        </tr>
+
+        <tr>
           <td>닉네임</td>
-          <td><input name="nickname" type="text"></td>
+          <td>
+            <input name="nickname" th:field="*{nickname}" type="text"  placeholder="닉네임을 입력하세요."
+                   th:class="${#fields.hasErrors('nickname')}? 'form-control fieldError' : 'form-control'">
+          </td>
         </tr>
         </tbody>
       </table>

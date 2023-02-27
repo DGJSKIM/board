@@ -38,6 +38,8 @@
         <tr>
           <th>글번호</th>
           <th>제목</th>
+          <th>작성자</th>
+          <th>작성시간</th>
         </tr>
       </thead>
       <tbody>
@@ -46,6 +48,11 @@
           <td>
             <a th:text="${board.title}" th:href="@{/board/view(id=${board.id})}"></a>
           </td>
+          <td th:text="${board.userid}" >
+          </td>
+
+          <td th:text="${#temporals.format(board.writedate,'yyyy-MM-dd HH:mm:ss')}"></td>
+
         </tr>
       </tbody>
     </table>

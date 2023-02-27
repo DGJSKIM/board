@@ -6,7 +6,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>게시물 리스트 페이지</title>
+    <title>Main 로그인</title>
 </head>
 <style>
     .layout {
@@ -33,19 +33,26 @@
 <body>
 
   <div class="layout">
-    <table class="table">
+    <form role="form" action="/board/loginpro" method="post" th:object="${userDto}">
+      <table class="table">
 
-      <tbody>
+        <tbody>
         <tr>
           <td>아이디</td>
-          <td><input type="text" name="id"></td>
+          <td><input type="text"  th:field="*{userid}" name="userid"></td>
         </tr>
         <tr>
           <td>비밀번호</td>
-          <td><input type="text" name="pw"></td>
+          <td><input type="text" name="password"></td>
         </tr>
-      </tbody>
-    </table>
+        </tbody>
+        <p th:if="${#fields.hasErrors('userid')}" th:errors="*{userid}">Incorrect date</p>
+        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>
+
+      </table>
+      <input type="submit">
+    </form>
+
   </div>
 
 </body>

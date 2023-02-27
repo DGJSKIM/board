@@ -2,8 +2,10 @@ package com.study.board.service;
 
 import com.study.board.entity.Board;
 import com.study.board.entity.Boardfile;
+import com.study.board.entity.Comment;
 import com.study.board.repository.BoardFileRepository;
 import com.study.board.repository.BoardRepository;
+import com.study.board.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +29,8 @@ public class BoardService {
     @Autowired
     private BoardFileRepository boardFileRepository;
 
-
+    @Autowired
+    private CommentRepository commentRepository;
     @Transactional
     // 게시글 작성
     public boolean write(MultipartHttpServletRequest mrequest, Board board){
@@ -78,12 +81,9 @@ public class BoardService {
 
     // id로 특정 게시글 불러오기
     public Model boardView(Model model, Integer id) {
-
-        System.out.println("id"+id);
-        System.out.println("boardRepository.findById(id).get()"+boardRepository.findById(id).get());
         model.addAttribute("board",boardRepository.findById(id).get());
         model.addAttribute("fileList",boardFileRepository.findByBoard_id(id));// Fk 로 findBy 하는법 찾아봄
-        System.out.println("fileList"+boardFileRepository.findByBoard_id(id));
+
         return model; // id 값으로 게시글 찾아서 반환
     }
 
@@ -99,4 +99,13 @@ public class BoardService {
         Eboard.setContent(board.getContent());
     }
 
+    public String addComment(Comment comment) { // 부모댓글임
+        Integer Pnum = commentRepository.findByNvlMaxParentnum();
+        comment.setParentid(Pnum+1);
+        comment.setLevel(0);
+        commentRepository.save(comment);
+
+        return "1";
+
+    }
 }
