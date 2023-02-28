@@ -1,9 +1,8 @@
 package com.study.board.Dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.study.board.entity.Comment;
+import com.study.board.entity.User;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.Entity;
@@ -14,7 +13,9 @@ import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter@Setter
+@Getter
+@Setter
+@Builder
 public class CommentDto {
 
 
@@ -26,6 +27,24 @@ public class CommentDto {
     private String userid;
     private Integer level;
     private Integer parentid;
+
+    private Integer targetid;
+    private Integer sort;
+
+    public Comment toEntity(){
+        return Comment.builder()
+                .id(id)
+                .text(text)
+                .writedate(writedate)
+                .boardid(boardid)
+                .userid(userid)
+                .level(level)
+                .parentid(parentid)
+                .targetid(targetid)
+                .sort(sort).build();
+
+
+    }
 
 
 }

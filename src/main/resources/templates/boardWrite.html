@@ -100,7 +100,7 @@ var fileSizeList = [];
 	            cache:false,
 	            success:function(json){
 	            	if(json=="1"){
-	            		swal('게시글을 작성했습니다.', "버튼을 누르면 게시판으로 이동합니다..", 'success')
+	            		swal('게시글을 작성했습니다.', "버튼을 누르면 게시판으로 이동합니다.", 'success')
 	            		.then((value) => {
 	            			location.href = "/board/list";
 	            		});

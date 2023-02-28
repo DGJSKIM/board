@@ -1,11 +1,13 @@
 package com.study.board.service;
 
+import com.study.board.Dto.CommentDto;
 import com.study.board.entity.Board;
 import com.study.board.entity.Boardfile;
 import com.study.board.entity.Comment;
 import com.study.board.repository.BoardFileRepository;
 import com.study.board.repository.BoardRepository;
 import com.study.board.repository.CommentRepository;
+import jdk.swing.interop.SwingInterOpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.transaction.Transactional;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -83,7 +87,7 @@ public class BoardService {
     public Model boardView(Model model, Integer id) {
         model.addAttribute("board",boardRepository.findById(id).get());
         model.addAttribute("fileList",boardFileRepository.findByBoard_id(id));// Fk 로 findBy 하는법 찾아봄
-
+        model.addAttribute("commentList",commentRepository.findAllByBoardidOrderBySortAsc(id));//
         return model; // id 값으로 게시글 찾아서 반환
     }
 
@@ -99,13 +103,88 @@ public class BoardService {
         Eboard.setContent(board.getContent());
     }
 
-    public String addComment(Comment comment) { // 부모댓글임
-        Integer Pnum = commentRepository.findByNvlMaxParentnum();
-        comment.setParentid(Pnum+1);
-        comment.setLevel(0);
-        commentRepository.save(comment);
+    @Transactional
+    public String addComment(CommentDto commentdto) { // 부모댓글임
+
+
+        commentdto.setLevel(0);
+
+        Comment comment = commentRepository.save(commentdto.toEntity());
+
+        comment.setParentid(comment.getId());// parendid 가 본인 자신의 id인 원댓글
+        comment.setTargetid(0);
+
+        List<Comment> commentList = commentRepository.findAllByBoardidAndSortIsNotNullOrderBySortDesc(commentdto.getBoardid());
+        // 
+        if(commentList.size() == 0){ // 첫댓글
+            System.out.println("!!!!!"+commentList.size());
+            comment.setSort(1);
+        }
+        else{
+            for(Comment cmt : commentList){
+                System.out.println(cmt.getId()+"번째"+cmt.getSort()+"개");
+            }
+            System.out.println("최대값"+commentList.get(0).getSort());
+            comment.setSort(commentList.get(0).getSort()+1); // 모든 sort 중 최대값 넣어주기
+        }
 
         return "1";
+
+    }
+
+    @Transactional
+    public String addRcomment(CommentDto commentdto) {
+        Comment Pcomment = commentRepository.findById(commentdto.getTargetid()).get(); // 답글 타겟으로 지정한 댓글
+
+        System.out.println("text"+commentdto.getText());
+
+        commentdto.setBoardid(Pcomment.getBoardid());
+        commentdto.setParentid(Pcomment.getParentid());
+        commentdto.setLevel(Pcomment.getLevel()+1);
+
+        Comment comment = commentRepository.save(commentdto.toEntity());
+
+        List<Comment> commentList = commentRepository.findAllByBoardidAndTargetidAndSortIsNotNullOrderBySortDesc(commentdto.getBoardid(),commentdto.getTargetid());
+        // 같은 게시글에 대해 같은 댓글을 타겟으로 한 댓글들을 sort 기준으로 정렬
+
+        if(commentList.size() == 0){ // 한 타겟 첫댓글
+            Comment Tcomment = commentRepository.findById(comment.getTargetid()).get(); // 타겟 코멘트
+            List<Comment> GTcommentList = commentRepository.findAllByBoardidAndSortGreaterThanAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , Tcomment.getSort());
+
+            for(Comment cmt : GTcommentList){
+                System.out.println(cmt.getId()+"번째"+cmt.getSort()+"개");
+                cmt.setSort(cmt.getSort()+1);
+            }
+
+            comment.setSort(Tcomment.getSort()+1);
+        }
+        else{
+            System.out.println("같은 타겟 2번째 이상");
+            List<Comment> StcommentList = commentRepository.findAllByBoardidAndTargetidAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , comment.getTargetid());
+            //SameTargetList 같은 타겟 가진 댓글리스트
+            // 얘네가 가진 값들중 제일 큰 값보다 +1 해서 마지막에 배치할 예정
+            for(Comment cmt : StcommentList){
+                System.out.println(cmt.getId()+"번째"+cmt.getSort()+"개");
+            }
+
+            Integer newSort = StcommentList.get(0).getSort()+1; // 같은 타겟 가진 녀석중 제일 뒤+1 넣어줄 값
+            System.out.println("newSort"+newSort);
+
+            List<Comment> GTcommentList = commentRepository.findAllByBoardidAndSortGreaterThanAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , newSort-1);
+            for(Comment cmt : GTcommentList){
+                cmt.setSort(cmt.getSort());
+            }
+
+            comment.setSort(newSort+1);
+
+        }
+        
+
+
+
+
+        return "1";
+
 
     }
 }

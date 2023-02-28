@@ -1,17 +1,21 @@
 package com.study.board.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter@Setter
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@DynamicUpdate
+@EntityListeners(AuditingEntityListener.class)
 public class Comment {
 
     @Id // primary key
@@ -25,6 +29,9 @@ public class Comment {
     private String userid;
     private Integer level;
     private Integer parentid;
+    private Integer targetid;
+    private Integer sort;
+
 
 
 }

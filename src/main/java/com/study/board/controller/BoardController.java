@@ -1,5 +1,6 @@
 package com.study.board.controller;
 
+import com.study.board.Dto.CommentDto;
 import com.study.board.Dto.MessageDto;
 import com.study.board.Dto.UserDto;
 import com.study.board.entity.Board;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.io.IOException;
@@ -195,11 +197,27 @@ public class BoardController {
 
     @PostMapping("/board/addCommentpro")
     @ResponseBody
-    public String addComment(Comment comment, HttpSession session){
+    public String addComment(CommentDto comment, HttpSession session, HttpServletRequest request){
+
+
+
         comment.setUserid((String)session.getAttribute("userid"));
 
         String result = boardService.addComment(comment);
 
+
+        return result;
+    }
+
+    @PostMapping("/board/addRcommentpro")
+    @ResponseBody
+    public String addRcomment(CommentDto comment, HttpSession session, HttpServletRequest request){
+
+        comment.setUserid((String)session.getAttribute("userid"));
+        System.out.println("Pid"+comment.getTargetid());
+        System.out.println("text"+comment.getText());
+
+        String result = boardService.addRcomment(comment);
 
         return result;
     }

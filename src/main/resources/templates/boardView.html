@@ -11,6 +11,13 @@
         margin : 0 auto;
     }
 
+    form {
+        margin:0;
+    }
+    td.writer{
+    width:80px;
+    }
+
 
 </style>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -24,20 +31,72 @@
         obj.style.height = '1px';
         obj.style.height = (12 + obj.scrollHeight) + 'px';
     }
-    // 댓글 추가
+
     function addComment(){
         var queryString = $("form[name=commentFrm]").serialize();
 
+
         $.ajax({
             url : '/board/addCommentpro',
-            data : queryString
-            dataType: "json"
+            data : queryString,
+            dataType: "json",
             method : "post",
             success : function(result){
-                alert("댓글 성공!");
-
+                if(result==1){
+                    swal('댓글을 작성했습니다.', "버튼을 누르면 페이지를 새로고침합니다.", 'success')
+	            		.then((value) => {
+	            			location.reload();
+	            		});
                 }
-            ,
+            },
+            error : function(request, status, error) {
+			alert("code: " + request.status + "\n" + "message: "
+					+ request.responseText + "\n" + "error: " + error);
+		    }
+
+
+
+        })
+
+    }
+
+    function addRcommentFrm(commentid, level){
+
+        if(level == 0 ){
+            if($("form#RcommentFrm"+commentid).length){
+                        $("div#Rcomment"+commentid).empty();
+                    }
+                    else{
+                        let html = "<form id='RcommentFrm" +  commentid+"'>";
+                        html+="<textarea name='text' placeholder='답댓글을 입력하세요'style='width: 90%; vertical-align: middle; margin-left: 10px' onkeydown='resize(this)' onkeyup='resize(this)'></textarea>";
+                        html+="<input type='hidden' name='targetid' value='"+commentid+"'/>";
+                        html+="<button type='button'  class='btn-secondary listView rounded' onclick='addRcomment("+commentid+")'>등록</button>";
+                        html += "</form>";
+                        $("div#Rcomment"+commentid).append(html);
+                    }
+        }
+
+
+
+
+    }
+
+    function addRcomment(parentid){
+        var queryString = $("form#RcommentFrm"+parentid).serialize();
+
+        $.ajax({
+            url : '/board/addRcommentpro',
+            data : queryString,
+            dataType: "json",
+            method : "post",
+            success : function(result){
+                if(result==1){
+                    swal('답댓글을 작성했습니다.', "버튼을 누르면 페이지를 새로고침합니다.", 'success')
+	            		.then((value) => {
+	            			location.reload();
+	            		});
+                }
+            },
             error : function(request, status, error) {
 			alert("code: " + request.status + "\n" + "message: "
 					+ request.responseText + "\n" + "error: " + error);
@@ -59,13 +118,32 @@
         <a th:href="@{/board/delete(id=${board.id})}">글삭제</a>
         <a th:href="@{/board/edit(id=${board.id})}">글수정</a>
 
+
+        <div  th:each="comment : ${commentList}" th:classappend="${comment.level == 1} ? 'ms-3'">
+            <table class="table" th:onclick="addRcommentFrm([[${comment.id}]],[[${comment.level}]])">
+                <tr  th:id="'comment'+${comment.id}">
+                    <td style="width:70px;" th:if="${comment.level == 1}"><i class="far fa-arrow-right"></i><i class="fas fa-arrow-right"></i></td>
+                    <td style="width:70px;" th:text="${comment.userid}"> </td>
+                    <td th:text="${comment.text}"> </td>
+                </tr>
+            </table>
+            <div th:id="'Rcomment'+${comment.id}"></div>
+
+
+
+        </div>
+
+        <div id="">
+
+        </div>
+
         <!-- 댓글 작성폼 -->
         <form name="commentFrm">
-            <input type="hidden" name="boardid" value="${board.id}"/>
+            <input type="hidden" name="boardid" th:value="${board.id}"/>
 
 
             <textarea name="text" placeholder="댓글을 입력하세요" style="width: 90%; vertical-align: middle; margin-left: 10px" onkeydown="resize(this)" onkeyup="resize(this)"></textarea>
-            <button type="button" id="addComment" class="btn-secondary listView rounded" onclick="addComment()">등록</button>
+            <button type="button"  class="btn-secondary listView rounded" onclick="addComment()">등록</button>
         </form>
     </div>
 
