@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>회원관리 페이지</title>
+</head>
+<style>
+    .layout {
+        width : 500px;
+        margin : 0 auto;
+    }
+
+    a {
+      text-decoration: none;
+      color: #222;
+    }
+
+    a:hover{
+      text-decoration: none;
+      color: #222;
+      font-weight: bold;
+    }
+
+</style>
+<script type="text/javascript">
+
+
+
+
+</script>
+<body>
+
+<div class="layout">
+    <table class="table">
+        <thead>
+        <tr>
+            <th></th>
+            <th>관리번호</th>
+            <th>아이디</th>
+            <th>닉네임</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${userList}" >
+            <td> <input type="checkbox" name="member" th:value="${member.id}"></td>
+            <td th:text="${member.id}">1</td>
+            <td>
+                <a th:text="${member.userid}" th:href="@{/board/admin/useredit/{userid}(userid=${member.userid})}"></a>
+            </td>
+            <td th:text="${member.nickname}"  th:href="@{/board/admin/useredit/{userid}(userid=${member.userid})}" >
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-primary" onclick="location.href='/board/join';">가입</button>
+</div>
+
+</body>
+</html>

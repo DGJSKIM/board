@@ -11,4 +11,6 @@ public interface BoardFileRepository extends JpaRepository<Boardfile, String> {
 
 
     public List<Boardfile> findByBoard_id(int id);
+
+    Boardfile findByBoardfileid(Integer fileid);
 }

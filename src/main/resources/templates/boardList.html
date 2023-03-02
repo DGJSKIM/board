@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"/>
 
 <head>
     <meta charset="UTF-8">
@@ -56,6 +57,62 @@
         </tr>
       </tbody>
     </table>
+
+
+    </th:block>
+    <th:block th:if="${nowPage>1}and${param.searchWord == null}">
+      <a th:href="@{/board/list(page = 0)}">&#x23EA</a>
+      <a th:href="@{/board/list(page = ${nowPage - 2})}">&#x25C0</a>
+    </th:block>
+    <th:block th:if="${nowPage>1}and${param.searchWord != null}">
+      <a th:href="@{/board/list(page = 0
+      , searchWord = ${param.searchWord}, searchType=${param.searchType})}">&#x25C0</a>
+      <a th:href="@{/board/list(page = ${nowPage - 2}, searchWord = ${param.searchWord}, searchType=${param.searchType})}">&#x23EA</a>
+    </th:block>
+
+    <th:block th:each="page:${#numbers.sequence(startPage,endPage)}">
+      <th:block th:if="${param.searchWord} != null">
+
+        <a th:if="${page != nowPage}" th:href="@{/board/list(page = ${page - 1}, searchWord = ${param.searchWord}, searchType=${param.searchType})}" th:text="${page}"></a>
+        <strong th:if="${page == nowPage}" th:href="@{/board/list(page = ${page - 1}, searchWord = ${param.searchWord}, searchType=${param.searchType})}" th:text="${page}" style="font-weight:bold;"></strong>
+      </th:block>
+      <th:block th:if="${param.searchWord} == null">
+        <a th:if="${page != nowPage}" th:href="@{/board/list(page = ${page - 1})}" th:text="${page}"></a>
+        <strong th:if="${page == nowPage}" th:href="@{/board/list(page = ${page - 1})}" th:text="${page}" style="font-weight:bold;"></strong>
+      </th:block>
+    </th:block>
+
+    <th:block th:if="${nowPage!= endPage}and${param.searchWord == null}">
+      <a th:href="@{/board/list(page = ${nowPage})}">&#x25B6</a>
+      <a th:href="@{/board/list(page = ${maxPage-1})}">&#x23EA</a>
+
+    </th:block>
+    <th:block th:if="${nowPage!= endPage}and${param.searchWord != null}">
+      <a th:href="@{/board/list(page = ${nowPage}, searchWord = ${param.searchWord}, searchType=${param.searchType})}">&#x25B6</a>
+      <a th:href="@{/board/list(page = ${maxPage-1}, searchWord = ${param.searchWord}, searchType=${param.searchType})}">&#x23E9</a>
+
+    </th:block>
+
+
+    <form th:action="@{/board/list}" method="get" style="margin-bottom: 10px;">
+      <select name="searchType" id="searchType" style="height: 26px;">
+        <option value="title">제목</option>
+        <option value="content">내용</option>
+        <option value="userid">작성자</option>
+      </select>
+      <input type="text" name="searchWord">
+      <button type="submit">검색</button>
+    </form>
+
+    <th:block th:if="${session.loginuser != null}">
+      <button type="button" class="btn btn-primary" onclick="location.href='/board/write';">글쓰기</button>
+      <button type="button" class="btn btn-primary" onclick="location.href='/board/logout';">로그아웃</button>
+      <button th:if="${session.loginuser.role == 1}" type="button" class="btn btn-success" onclick="location.href='/board/admin';">회원관리</button>
+    </th:block>
+    <th:block th:if="${session.loginuser == null}">
+      <button type="button" class="btn btn-primary" onclick="location.href='/board';">로그인</button>
+    </th:block>
+
   </div>
 
 </body>

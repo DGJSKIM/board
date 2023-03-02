@@ -159,7 +159,6 @@ public class BoardService {
             comment.setSort(Tcomment.getSort()+1);
         }
         else{
-            System.out.println("같은 타겟 2번째 이상");
             List<Comment> StcommentList = commentRepository.findAllByBoardidAndTargetidAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , comment.getTargetid());
             //SameTargetList 같은 타겟 가진 댓글리스트
             // 얘네가 가진 값들중 제일 큰 값보다 +1 해서 마지막에 배치할 예정
@@ -172,19 +171,24 @@ public class BoardService {
 
             List<Comment> GTcommentList = commentRepository.findAllByBoardidAndSortGreaterThanAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , newSort-1);
             for(Comment cmt : GTcommentList){
-                cmt.setSort(cmt.getSort());
+                cmt.setSort(cmt.getSort()+1);
             }
+            comment.setSort(newSort);
+        }
+        return "1";
+    }
 
-            comment.setSort(newSort+1);
+    public Page<Board> boardListWithSearch(Pageable pageable, String searchType, String searchWord) {
+        Page<Board> list = null;
+        switch(searchType) {
+            case "title": list = boardRepository.findByTitleContaining(pageable,searchWord);
+                break;
+            case "userid": list = boardRepository.findByUseridContaining(pageable,searchWord);
+                break;
+            case "content": list = boardRepository.findByContentContaining(pageable,searchWord);
 
         }
-        
-
-
-
-
-        return "1";
-
+        return list;
 
     }
 }

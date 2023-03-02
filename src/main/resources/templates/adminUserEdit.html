@@ -38,25 +38,22 @@
 
 
   <div class="layout">
-    <form role="form" action="/board/joinpro" method="post" th:object="${userDto}">
+    <form role="form" action="/board/admin/usereditPro" method="post" th:object="${user}">
       <table class="table">
         <tbody>
         <tr>
           <td>아이디</td>
           <td>
-            <input name="userid" th:field="*{userid}" type="text"  placeholder="id를 입력하세요."
-              th:class="${#fields.hasErrors('userid')}? 'form-control fieldError' : 'form-control'">
+            <input name="userid" readonly type="text" th:field="*{userid}" class="form-control">
           </td>
 
         </tr>
-        <tr>
-          <p th:if="${#fields.hasErrors('userid')}" th:errors="*{userid}">Incorrect date</p>
-        </tr>
+
 
         <tr>
           <td>비밀번호</td>
           <td>
-            <input name="password" th:field="*{password}" type="password"  placeholder="비밀번호를 입력하세요."
+            <input name="password" type="password"  placeholder="비밀번호를 입력하세요."
                    th:class="${#fields.hasErrors('password')}? 'form-control fieldError' : 'form-control'">
           </td>
 
@@ -68,13 +65,19 @@
         <tr>
           <td>닉네임</td>
           <td>
-            <input name="nickname" th:field="*{nickname}" type="text"  placeholder="닉네임을 입력하세요."
+            <input name="nickname"  type="text"  placeholder="닉네임을 입력하세요."  th:value="*{nickname}"
                    th:class="${#fields.hasErrors('nickname')}? 'form-control fieldError' : 'form-control'">
           </td>
         </tr>
         </tbody>
       </table>
-      <input type="submit">
+      <button type="submit" class="btn btn-info">변경</button>
+
+
+    </form>
+    <form action="/board/admin/userdeletePro" method="post">
+      <input name="id" type="hidden" th:value="${user.id}">
+      <button type="submit" class="btn btn-danger">삭제</button>
     </form>
 
   </div>

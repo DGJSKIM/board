@@ -1,5 +1,6 @@
 package com.study.board.entity;
 
+import com.study.board.Dto.UserDto;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -25,6 +26,17 @@ public class User {
     private String password;
     private String nickname;
     private int role;// 1 일반 0 관리자
+
+    public UserDto toDto(){
+        return UserDto.builder()
+                .id(id)
+                .userid(userid)
+                .password(password)
+                .nickname(nickname)
+                .role(role).build();
+
+
+    }
 /*
     @OneToMany(mappedBy="user")
     private List<Board> boardList= new ArrayList<>();

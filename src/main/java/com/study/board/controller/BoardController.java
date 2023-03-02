@@ -4,26 +4,35 @@ import com.study.board.Dto.CommentDto;
 import com.study.board.Dto.MessageDto;
 import com.study.board.Dto.UserDto;
 import com.study.board.entity.Board;
+import com.study.board.entity.Boardfile;
 import com.study.board.entity.Comment;
+import com.study.board.entity.User;
+import com.study.board.repository.BoardFileRepository;
 import com.study.board.repository.BoardRepository;
+import com.study.board.repository.UserRepository;
 import com.study.board.service.BoardService;
 import com.study.board.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +47,11 @@ public class BoardController {
     private BoardService boardService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BoardFileRepository boardFileRepository;
 
     /**
      * 메인화면(로그인)
@@ -57,7 +71,9 @@ public class BoardController {
         if(result.hasErrors()){
             return "redirect:/board";
         }
-        if(!userService.login(userDto)){ // 비밀번호 오류 or 아이디 오류(보안 위해 구분x)
+        User loginuser = userService.login(userDto);
+
+        if(loginuser == null){ // 비밀번호 오류 or 아이디 오류(보안 위해 구분x)
             result.addError(new FieldError("userDto","userid","잘못된 로그인 정보입니다. 다시 입력해주세요."));
             return "redirect:/board";
 
@@ -65,8 +81,16 @@ public class BoardController {
 
         // 모두 통과시 session 에 값 저장
         session.setAttribute("userid",userDto.getUserid());
+        session.setAttribute("loginuser",loginuser.toDto());
 
         return "redirect:/board/list";
+    }
+
+    @GetMapping("/board/logout") // localhost:8090/board/write
+    public String logout(HttpSession session) {
+        session.removeAttribute("userid");
+        session.removeAttribute("loginuser");
+        return "redirect:/board";
     }
 
 
@@ -85,14 +109,14 @@ public class BoardController {
      * 회원가입 처리
      */
     @PostMapping("/board/joinpro")
-    public String boardJoinPro(@Valid UserDto userDto, BindingResult result) {
+    public String boardJoinPro(@Valid UserDto userDto, BindingResult result, HttpSession session) {
         // 기본적인 정규식 조건은 Valid 로 구분 중복값만 service 에서 체크
 
         if(result.hasErrors()){
             return "boardJoin";
         }
         try{
-            userService.userJoin(userDto);
+            userService.userJoin(userDto , session);
         }catch (IllegalStateException e){
 
             result.addError(new FieldError("userDto","userid",e.getMessage()));
@@ -136,9 +160,31 @@ public class BoardController {
      * 게시글 리스트
      */
     @GetMapping("/board/list")
-    public String boardList(Model model, @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable) {
+    public String boardList(Model model,
+                            @PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable,
+                            String searchType,
+                            String searchWord) {
+        Page<Board> list;
+        if(searchWord != null){
+            list = boardService.boardListWithSearch(pageable,searchType,searchWord);
+        }
+        else{
+            list = boardService.boardList(pageable);// 검색x
+        }
 
-        model.addAttribute("list",boardService.boardList(pageable));
+
+        int nowPage = list.getPageable().getPageNumber() +1; // pageable 0부터 시작함
+        int startPage = Math.max(nowPage-4,1);
+        int endPage = Math.min(nowPage+4, list.getTotalPages());
+        int maxPage = list.getTotalPages();
+
+
+
+        model.addAttribute("list",list);
+        model.addAttribute("nowPage",nowPage);
+        model.addAttribute("startPage",startPage);
+        model.addAttribute("endPage",endPage);
+        model.addAttribute("maxPage",maxPage);
 
         return "boardlist";
     }
@@ -220,6 +266,102 @@ public class BoardController {
         String result = boardService.addRcomment(comment);
 
         return result;
+    }
+
+    /**
+     *  !!!! 관리자 페이지
+     */
+    @GetMapping("/board/admin")
+    public String admin(HttpSession session, Model model){
+        String loginUser = (String)session.getAttribute("userid");
+        if((loginUser != null) && (!loginUser.isEmpty()) ){
+            if(userService.checkAdmin(loginUser) ){
+
+                model.addAttribute("userList",  userService.getUserList());
+                return "admin";
+            }
+        }
+
+        return "redirect:/board";
+
+    }
+
+    @GetMapping("/board/admin/useredit/{userid}")
+    public String admin(@PathVariable("userid") String userid , Model model){
+
+        model.addAttribute("user", userRepository.findByUserid(userid).get(0).toDto());
+
+        return "adminUserEdit";
+    }
+
+    @PostMapping("/board/admin/usereditPro")
+    public String usereditPro(@Valid UserDto user, BindingResult result) {
+        // 기본적인 정규식 조건은 Valid 로 구분 중복값만 service 에서 체크
+
+        System.out.println("user!!!!"+user);
+        System.out.println("user!!!!"+user.getNickname());
+        if(result.hasErrors()){
+            return "adminUserEdit";
+        }
+
+        userService.userEdit(user);
+        return "redirect:/board/admin";
+    }
+
+    @PostMapping("/board/admin/userdeletePro")
+    public String userdeletePro(Long id) {
+        // 기본적인 정규식 조건은 Valid 로 구분 중복값만 service 에서 체크
+
+        userRepository.delete(userRepository.findById(id).get());
+
+        return "redirect:/board/admin";
+    }
+
+    @RequestMapping(value="/board/download")
+    public void download(HttpServletRequest request, HttpServletResponse response){
+        Integer fileid = Integer.valueOf(request.getParameter("fileid"));
+        String orgFilename = null;
+        response.setContentType("text/html; charset=UTF-8");
+
+        try {
+            Boardfile file = boardFileRepository.findByBoardfileid(fileid);
+            File downloadFile = new File(file.getFilepath(), file.getFilename());
+
+            try {
+                orgFilename = new String(file.getOrgfilename().getBytes("UTF-8"), "8859_1");
+                // orgFilename.getBytes("UTF-8") 은 UTF-8 형태로 되어진 문자열 orgFilename 을 byte 형태로 변경한 후
+                // byte 형태로 되어진 것을 표준인 ISO-Latin1(혹은 Latin1 또는 8859_1) 형태로 인코딩한 문자열로 만든다.
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+
+
+            if(downloadFile.exists()){ // 경로에 다운로드할 해당 파일이 있다면
+
+
+                response.setContentType("application/octet-stream");
+                response.setHeader("Content-disposition", "attachment; filename="+orgFilename);
+                byte[] readByte = new byte[4096];
+                BufferedInputStream bfin = new BufferedInputStream(new FileInputStream(downloadFile));
+
+                ServletOutputStream souts = response.getOutputStream();
+                int length = 0;
+
+                while( (length = bfin.read(readByte, 0, 4096)) != -1  ) {
+                    souts.write(readByte, 0, length);
+                }
+                souts.flush(); // ServletOutputStream souts 에 기록(저장)해둔 내용을 클라이언트로 내본다.
+
+                souts.close(); // ServletOutputStream souts 객체를 소멸시킨다.
+                bfin.close();  // BufferedInputStream bfin 객체를 소멸시킨다.
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
 
