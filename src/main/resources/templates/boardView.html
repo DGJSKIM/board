@@ -107,6 +107,31 @@
         })
 
     }
+
+    function delComment(commentid){
+
+        $.ajax({
+            url : '/board/delCommentpro',
+            data : {"commentid":commentid},
+            dataType: "json",
+            method : "post",
+            success : function(result){
+                if(result==1){
+                    swal('댓글을 삭제했습니다.', "버튼을 누르면 페이지를 새로고침합니다.", 'success')
+	            		.then((value) => {
+	            			location.reload();
+	            		});
+                }
+            },
+            error : function(request, status, error) {
+			alert("code: " + request.status + "\n" + "message: "
+					+ request.responseText + "\n" + "error: " + error);
+		    }
+
+
+
+        })
+    }
 </script>
 <body>
     <div class="layout">
@@ -133,6 +158,9 @@
                     <td style="width:70px;" th:if="${comment.level == 1}"><i class="far fa-arrow-right"></i><i class="fas fa-arrow-right"></i></td>
                     <td style="width:70px;" th:text="${comment.userid}"> </td>
                     <td th:text="${comment.text}"> </td>
+                    <td th:if="${comment.userid=session.userid}or${session.loginuser.role == 1}">
+                        <p th:onclick="delComment([[${comment.id}]])">&#x2716</p>
+                    </td>
                 </tr>
             </table>
             <div th:id="'Rcomment'+${comment.id}"></div>
