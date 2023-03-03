@@ -31,6 +31,8 @@ public class CommentDto {
     private Integer targetid;
     private Integer sort;
 
+    private Integer deletecheck;
+
     public Comment toEntity(){
         return Comment.builder()
                 .id(id)
@@ -41,7 +43,8 @@ public class CommentDto {
                 .level(level)
                 .parentid(parentid)
                 .targetid(targetid)
-                .sort(sort).build();
+                .sort(sort)
+                .deletecheck(deletecheck).build();
 
 
     }

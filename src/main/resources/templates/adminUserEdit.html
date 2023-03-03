@@ -38,7 +38,7 @@
 
 
   <div class="layout">
-    <form role="form" action="/board/admin/usereditPro" method="post" th:object="${user}">
+    <form role="form" action="/board/admin/usereditPro" method="post" th:object="${userDto}">
       <table class="table">
         <tbody>
         <tr>
@@ -52,8 +52,9 @@
 
         <tr>
           <td>비밀번호</td>
+
           <td>
-            <input name="password" type="password"  placeholder="비밀번호를 입력하세요."
+            <input id="password" name="password" th:field="*{password}" type="password"  placeholder="비밀번호를 입력하세요."
                    th:class="${#fields.hasErrors('password')}? 'form-control fieldError' : 'form-control'">
           </td>
 
@@ -76,7 +77,7 @@
 
     </form>
     <form action="/board/admin/userdeletePro" method="post">
-      <input name="id" type="hidden" th:value="${user.id}">
+      <input name="id" type="hidden" th:value="${userDto.id}">
       <button type="submit" class="btn btn-danger">삭제</button>
     </form>
 

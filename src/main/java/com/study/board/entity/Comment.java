@@ -32,6 +32,8 @@ public class Comment {
     private Integer targetid;
     private Integer sort;
 
+    private Integer deletecheck;
+
 
 
 }

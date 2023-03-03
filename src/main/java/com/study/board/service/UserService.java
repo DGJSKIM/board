@@ -27,7 +27,9 @@ public class UserService {
 
 
 
-    //private final BCryptPasswordEncoder encoder;
+    /**
+     * 회원가입
+     */
     public String userJoin(UserDto userDto, HttpSession session) {
         
 
@@ -46,6 +48,9 @@ public class UserService {
         return userDto.getUserid();
     }
 
+    /**
+     * 로그인
+     */
     public User login(UserDto userDto) { // 로그인 처리
 
         if(!userRepository.findByUserid(userDto.getUserid()).isEmpty() && userRepository.findByUserid(userDto.getUserid()).size()==1){
@@ -60,6 +65,9 @@ public class UserService {
         return null;
     }
 
+    /**
+     * admin 체크 (role == 1)
+     */
     public boolean checkAdmin(String loginUser) {
         boolean result;
         if(userRepository.findByUserid(loginUser).get(0).getRole()==1){
@@ -71,10 +79,16 @@ public class UserService {
         return result;
     }
 
+    /**
+     * 회원리스트 가져오기
+     */
     public List<User> getUserList() {
         return userRepository.findAll();
     }
 
+    /**
+     * 회원정보 수정
+     */
     @Transactional
     public void userEdit(UserDto userDto) {
         User user = userRepository.findByUserid(userDto.getUserid()).get(0);

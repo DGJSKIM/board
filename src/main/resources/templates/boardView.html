@@ -67,10 +67,10 @@
                         $("div#Rcomment"+commentid).empty();
                     }
                     else{
-                        let html = "<form id='RcommentFrm" +  commentid+"'>";
-                        html+="<textarea name='text' placeholder='답댓글을 입력하세요'style='width: 90%; vertical-align: middle; margin-left: 10px' onkeydown='resize(this)' onkeyup='resize(this)'></textarea>";
+                        let html = "<form id='RcommentFrm" +  commentid+"' style='margin: 0 -30px 0 30px'>";
+                        html+="<textarea name='text' placeholder='답댓글을 입력하세요'style=' width: 90%; vertical-align: middle; margin-left: 10px' onkeydown='resize(this)' onkeyup='resize(this)'></textarea>";
                         html+="<input type='hidden' name='targetid' value='"+commentid+"'/>";
-                        html+="<button type='button'  class='btn-secondary listView rounded' onclick='addRcomment("+commentid+")'>등록</button>";
+                        html+="<button type='button' style='margin-top: 4px;margin-left: 10px;' class='btn-secondary listView rounded' onclick='addRcomment("+commentid+")'>등록</button>";
                         html += "</form>";
                         $("div#Rcomment"+commentid).append(html);
                     }
@@ -105,6 +105,55 @@
 
 
         })
+
+    }
+     function editComment(commentid, text){
+
+
+        if($("form#editComment"+commentid).length){
+            $("div#Rcomment"+commentid).empty();
+        }
+        else{
+            let html = "<form id='editComment" +  commentid+"'>";
+            html+="<textarea name='text' valie='"+text+"'style='width: 90%; vertical-align: middle; margin-left: 10px' onkeydown='resize(this)' onkeyup='resize(this)'></textarea>";
+            html+="<input type='hidden' name='id' value='"+commentid+"'/>";
+            html+="<button type='button' style='margin-top: 4px;margin-left: 10px;' class='btn-secondary listView rounded' onclick='editCommentPro("+commentid+")'>수정</button>";
+            html += "</form>";
+            $("div#Rcomment"+commentid).append(html);
+        }
+    }
+
+    function editCommentPro(commentid){
+        var queryString = $("form#editComment"+commentid).serialize();
+
+        $.ajax({
+            url : '/board/editCommentpro',
+            data : queryString,
+            dataType: "json",
+            method : "post",
+            success : function(result){
+                if(result==1){
+                    swal('댓글을 수정했습니다.', "버튼을 누르면 페이지를 새로고침합니다.", 'success')
+	            		.then((value) => {
+	            			location.reload();
+	            		});
+                }
+                else{
+                    swal('댓글을 수정에 실패했습니다.', "버튼을 누르면 페이지를 새로고침합니다.", 'warning')
+	            		.then((value) => {
+	            			location.reload();
+	            		});
+                }
+            },
+            error : function(request, status, error) {
+			alert("code: " + request.status + "\n" + "message: "
+					+ request.responseText + "\n" + "error: " + error);
+		    }
+
+
+
+        })
+
 
     }
 
@@ -143,7 +192,7 @@
         </div>
         <p th:text="${board.content}">내용</p>
         <th:block th:if="${session.loginuser != null}">
-            <th:block th:if="${session.userid == board.userid} or ${session.loginuser.role == 1}">
+            <th:block th:if="${session.userid != null }and(${session.userid == board.userid} or ${session.loginuser.role == 1})">
 
 
                 <a th:href="@{/board/delete(id=${board.id})}">글삭제</a>
@@ -153,14 +202,18 @@
 
 
         <div  th:each="comment : ${commentList}" th:classappend="${comment.level == 1} ? 'ms-3'">
-            <table class="table" th:onclick="addRcommentFrm([[${comment.id}]],[[${comment.level}]])">
+            <table class="table">
                 <tr  th:id="'comment'+${comment.id}">
                     <td style="width:70px;" th:if="${comment.level == 1}"><i class="far fa-arrow-right"></i><i class="fas fa-arrow-right"></i></td>
                     <td style="width:70px;" th:text="${comment.userid}"> </td>
-                    <td th:text="${comment.text}"> </td>
-                    <td th:if="${comment.userid=session.userid}or${session.loginuser.role == 1}">
-                        <p th:onclick="delComment([[${comment.id}]])">&#x2716</p>
+                    <td th:if="${comment.deletecheck == 0}" th:text="${comment.text}"  th:onclick="addRcommentFrm([[${comment.id}]],[[${comment.level}]])"> </td>
+                    <td th:if="${comment.deletecheck == 1}" >삭제된 메시지입니다.</td>
+                    <td th:if="${session.loginuser != null}and(${comment.userid==session.userid}or${session.loginuser.role == 1})">
+                        <span th:if="${comment.deletecheck == 0}" th:onclick="editComment([[${comment.id}]],[[${comment.text}]])">&#x1F527</span>
+                        <span th:if="${comment.deletecheck == 0}" th:onclick="delComment([[${comment.id}]])">&#x2716</span>
                     </td>
+
+
                 </tr>
             </table>
             <div th:id="'Rcomment'+${comment.id}"></div>
@@ -174,10 +227,8 @@
         <!-- 댓글 작성폼 -->
         <form name="commentFrm">
             <input type="hidden" name="boardid" th:value="${board.id}"/>
-
-
             <textarea name="text" placeholder="댓글을 입력하세요" style="width: 90%; vertical-align: middle; margin-left: 10px" onkeydown="resize(this)" onkeyup="resize(this)"></textarea>
-            <button type="button"  class="btn-secondary listView rounded" onclick="addComment()">등록</button>
+            <button  style='margin-top: 4px;margin-left: 10px;' type="button"  class="btn-secondary listView rounded" onclick="addComment()">등록</button>
         </form>
     </div>
 

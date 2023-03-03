@@ -86,6 +86,9 @@ public class BoardController {
         return "redirect:/board/list";
     }
 
+    /**
+     * 로그아웃
+     */
     @GetMapping("/board/logout") // localhost:8090/board/write
     public String logout(HttpSession session) {
         session.removeAttribute("userid");
@@ -116,7 +119,7 @@ public class BoardController {
             return "boardJoin";
         }
         try{
-            userService.userJoin(userDto , session);
+            userService.userJoin(userDto , session); // 저장도 하고나옴 나중에는 이러지 말자
         }catch (IllegalStateException e){
 
             result.addError(new FieldError("userDto","userid",e.getMessage()));
@@ -142,7 +145,7 @@ public class BoardController {
     @PostMapping(value = "/board/writepro", produces ="text/plain; charset=utf-8")
     public String boardWritePro(MultipartHttpServletRequest mrequest, Board board, HttpSession session) throws IOException {
 
-        System.out.println("도착");
+
         board.setUserid((String)session.getAttribute("userid"));
         boolean a = boardService.write(mrequest, board);
         int result = 0;
@@ -151,9 +154,6 @@ public class BoardController {
         }
 
         // 글 제목 내용 체크
-        System.out.println("제목" + board.getTitle());
-        System.out.println("내용" + board.getContent());
-        System.out.println("result" + result);
         return Integer.toString(result);
     }
     /**
@@ -171,15 +171,15 @@ public class BoardController {
         else{
             list = boardService.boardList(pageable);// 검색x
         }
-
-
         int nowPage = list.getPageable().getPageNumber() +1; // pageable 0부터 시작함
         int startPage = Math.max(nowPage-4,1);
         int endPage = Math.min(nowPage+4, list.getTotalPages());
         int maxPage = list.getTotalPages();
 
-
-
+        System.out.println("startPage"+startPage);
+        System.out.println("endPage"+endPage);
+        System.out.println("list.getTotalPages()"+list.getTotalPages());
+        System.out.println("maxPage"+maxPage);
         model.addAttribute("list",list);
         model.addAttribute("nowPage",nowPage);
         model.addAttribute("startPage",startPage);
@@ -196,6 +196,8 @@ public class BoardController {
         model = boardService.boardView(model, id);
         return "boardView";
     }
+
+
 
     /**
      * 게시글 삭제처리
@@ -241,10 +243,12 @@ public class BoardController {
         return "redirect:/board/list";
     }
 
+    /**
+     * 댓글달기
+     */
     @PostMapping("/board/addCommentpro")
     @ResponseBody
-    public String addComment(CommentDto comment, HttpSession session, HttpServletRequest request){
-
+    public String addComment(CommentDto comment, HttpSession session){
 
 
         comment.setUserid((String)session.getAttribute("userid"));
@@ -255,16 +259,39 @@ public class BoardController {
         return result;
     }
 
+    /**
+     * 답글달기
+     */
     @PostMapping("/board/addRcommentpro")
     @ResponseBody
-    public String addRcomment(CommentDto comment, HttpSession session, HttpServletRequest request){
+    public String addRcomment(CommentDto comment, HttpSession session){
 
         comment.setUserid((String)session.getAttribute("userid"));
-        System.out.println("Pid"+comment.getTargetid());
-        System.out.println("text"+comment.getText());
-
         String result = boardService.addRcomment(comment);
 
+        return result;
+    }
+    /**
+     * 댓글 삭제
+     */
+    @PostMapping("/board/delCommentpro")
+    @ResponseBody
+    public String delCommentpro(Model model , String commentid) {
+
+        String result = boardService.deleteComment(commentid);
+        return result;
+    }
+
+    /**
+     * 댓글 수정
+     */
+    @PostMapping("/board/editCommentpro")
+    @ResponseBody
+    public String editCommentpro(CommentDto commentDto) {
+
+        System.out.println("commentDto"+commentDto);
+
+        String result = boardService.editComment(commentDto);
         return result;
     }
 
@@ -286,20 +313,22 @@ public class BoardController {
 
     }
 
+    /**
+     * 회원정보 수정창
+     */
     @GetMapping("/board/admin/useredit/{userid}")
     public String admin(@PathVariable("userid") String userid , Model model){
 
-        model.addAttribute("user", userRepository.findByUserid(userid).get(0).toDto());
-
+        model.addAttribute("userDto",userRepository.findByUserid(userid).get(0).toDto());
         return "adminUserEdit";
     }
 
+    /**
+     * 회원정보 수정
+     */
     @PostMapping("/board/admin/usereditPro")
-    public String usereditPro(@Valid UserDto user, BindingResult result) {
+    public String usereditPro(@Valid UserDto user, BindingResult result, Model model) {
         // 기본적인 정규식 조건은 Valid 로 구분 중복값만 service 에서 체크
-
-        System.out.println("user!!!!"+user);
-        System.out.println("user!!!!"+user.getNickname());
         if(result.hasErrors()){
             return "adminUserEdit";
         }
@@ -308,6 +337,9 @@ public class BoardController {
         return "redirect:/board/admin";
     }
 
+    /**
+     * 유저 삭제
+     */
     @PostMapping("/board/admin/userdeletePro")
     public String userdeletePro(Long id) {
         // 기본적인 정규식 조건은 Valid 로 구분 중복값만 service 에서 체크
@@ -317,6 +349,9 @@ public class BoardController {
         return "redirect:/board/admin";
     }
 
+    /**
+     * 첨부파일 다운로드
+     */
     @RequestMapping(value="/board/download")
     public void download(HttpServletRequest request, HttpServletResponse response){
         Integer fileid = Integer.valueOf(request.getParameter("fileid"));

@@ -7,7 +7,6 @@ import com.study.board.entity.Comment;
 import com.study.board.repository.BoardFileRepository;
 import com.study.board.repository.BoardRepository;
 import com.study.board.repository.CommentRepository;
-import jdk.swing.interop.SwingInterOpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +18,6 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.transaction.Transactional;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +32,10 @@ public class BoardService {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    /**
+     * 글 작성하기
+     */
     @Transactional
     // 게시글 작성
     public boolean write(MultipartHttpServletRequest mrequest, Board board){
@@ -77,13 +78,18 @@ public class BoardService {
 
     }
 
+    /**
+     * 글 리스트 전부 가져오기
+     */
     // 게시글 리스트 처리
     public Page<Board> boardList(Pageable pageable){
 
         return boardRepository.findAll(pageable);
     }
 
-    // id로 특정 게시글 불러오기
+    /**
+     * 글 정보 하나 가져오기(첨부파일, 댓글 포함)
+     */
     public Model boardView(Model model, Integer id) {
         model.addAttribute("board",boardRepository.findById(id).get());
         model.addAttribute("fileList",boardFileRepository.findByBoard_id(id));// Fk 로 findBy 하는법 찾아봄
@@ -91,11 +97,16 @@ public class BoardService {
         return model; // id 값으로 게시글 찾아서 반환
     }
 
-    // 특정 게시글 삭제
+    /**
+     * 게시글 삭제
+     */
     public void deleteBoard(Integer id){
         boardRepository.deleteById(id);
     }
 
+    /**
+     * 게시글 편집
+     */
     @Transactional
     public void editBoard(Integer id, Board board){// dirty checking 개념 공부할것!
         Board Eboard = boardRepository.findById(id).get(); // Eboard -> 수정할 보드
@@ -103,11 +114,15 @@ public class BoardService {
         Eboard.setContent(board.getContent());
     }
 
+    /**
+     * 댓글 달기
+     */
     @Transactional
     public String addComment(CommentDto commentdto) { // 부모댓글임
 
 
         commentdto.setLevel(0);
+        commentdto.setDeletecheck(0);
 
         Comment comment = commentRepository.save(commentdto.toEntity());
 
@@ -132,15 +147,17 @@ public class BoardService {
 
     }
 
+    /**
+     * 답글 달기
+     */
     @Transactional
     public String addRcomment(CommentDto commentdto) {
         Comment Pcomment = commentRepository.findById(commentdto.getTargetid()).get(); // 답글 타겟으로 지정한 댓글
 
-        System.out.println("text"+commentdto.getText());
-
         commentdto.setBoardid(Pcomment.getBoardid());
         commentdto.setParentid(Pcomment.getParentid());
         commentdto.setLevel(Pcomment.getLevel()+1);
+        commentdto.setDeletecheck(0);
 
         Comment comment = commentRepository.save(commentdto.toEntity());
 
@@ -152,7 +169,6 @@ public class BoardService {
             List<Comment> GTcommentList = commentRepository.findAllByBoardidAndSortGreaterThanAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , Tcomment.getSort());
 
             for(Comment cmt : GTcommentList){
-                System.out.println(cmt.getId()+"번째"+cmt.getSort()+"개");
                 cmt.setSort(cmt.getSort()+1);
             }
 
@@ -162,10 +178,6 @@ public class BoardService {
             List<Comment> StcommentList = commentRepository.findAllByBoardidAndTargetidAndSortIsNotNullOrderBySortDesc(comment.getBoardid() , comment.getTargetid());
             //SameTargetList 같은 타겟 가진 댓글리스트
             // 얘네가 가진 값들중 제일 큰 값보다 +1 해서 마지막에 배치할 예정
-            for(Comment cmt : StcommentList){
-                System.out.println(cmt.getId()+"번째"+cmt.getSort()+"개");
-            }
-
             Integer newSort = StcommentList.get(0).getSort()+1; // 같은 타겟 가진 녀석중 제일 뒤+1 넣어줄 값
             System.out.println("newSort"+newSort);
 
@@ -178,6 +190,9 @@ public class BoardService {
         return "1";
     }
 
+    /**
+     * 글 목록 가져오기(with search)
+     */
     public Page<Board> boardListWithSearch(Pageable pageable, String searchType, String searchWord) {
         Page<Board> list = null;
         switch(searchType) {
@@ -190,5 +205,35 @@ public class BoardService {
         }
         return list;
 
+    }
+
+    /**
+     * 댓글 삭제(update deletecheck=1)
+     */
+    @Transactional
+    public String deleteComment(String commentid) {
+
+        try{
+            Comment DComment = commentRepository.findById(Integer.valueOf(commentid)).get();
+            DComment.setDeletecheck(1);
+        }catch (Exception e){
+            return "0";
+        }
+        return "1";
+    }
+
+    /**
+     * 댓글 변경
+     */
+    @Transactional
+    public String editComment(CommentDto commentDto) {
+        try{
+            Comment Ecomment = commentRepository.findById(Integer.valueOf(commentDto.getId())).get();
+            Ecomment.setText(commentDto.getText());
+        }catch (Exception e){
+            return "0";
+        }
+
+        return "1";
     }
 }
